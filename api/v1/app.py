@@ -5,6 +5,7 @@ script that starts a Flask web application.
 from flask import Flask
 from api.v1.views import app_views
 from models import storage
+from flask import jsonify
 import os
 
 """create a variable app, instance of Flask"""
@@ -18,6 +19,11 @@ app.register_blueprint(app_views)
 def close_storage(exception):
     """Closes the connection to the database"""
     storage.close()
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({"error": "Not found"}), 404
 
 
 if __name__ == "__main__":

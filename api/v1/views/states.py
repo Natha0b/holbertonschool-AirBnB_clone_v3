@@ -20,7 +20,6 @@ def get_all_states():
     return jsonify(states_list)
 
 
-
 @app_views.route('/states/<state_id>', methods=['GET'], strict_slashes=False)
 def get_state_by_id(state_id):
     """Returns an empty dictionary """

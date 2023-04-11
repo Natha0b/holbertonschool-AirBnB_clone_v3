@@ -9,9 +9,6 @@ from models import storage
 import json
 
 
-app = Flask(__name__)
-
-
 @app_views.route('/status', methods=['GET'])
 def status():
     """
@@ -25,12 +22,7 @@ def stats():
     """
     Returns the number of objects by type
     """
-    from models.amenity import Amenity
-    from models.city import City
-    from models.place import Place
-    from models.review import Review
-    from models.state import State
-    from models.user import User
+
     from models import storage
     classes = {"amenities": storage.count('Amenity'),
                "cities": storage.count('City'),
@@ -40,7 +32,3 @@ def stats():
                "users": storage.count('User')}
     json_string = json.dumps(classes, indent=2)
     return json_string
-
-
-if __name__ == '__main__':
-    app.run(debug=True)

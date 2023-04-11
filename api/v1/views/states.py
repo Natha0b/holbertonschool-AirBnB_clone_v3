@@ -69,7 +69,3 @@ def delete_state_by_id(state_id):
     storage.delete(state)
     storage.save()
     return jsonify({}), 200
-
-
-if __name__ == '__main__':
-    app_views.run(debug=True)

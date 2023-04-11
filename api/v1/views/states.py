@@ -13,16 +13,18 @@ def get_all_states():
     """
     stores all objects in a variable and returns them as a json
     """
-    states = storage.all(State)
-    state_list = [state.to_dict() for state in states]
-    return jsonify(state_list)
+    states = storage.all(State).values()
+    states_list = []
+    for state in states:
+        states_list.append(state.to_dict())
+    return jsonify(states_list)
 
 
 
 @app_views.route('/states/<state_id>', methods=['GET'], strict_slashes=False)
 def get_state_by_id(state_id):
     """Returns an empty dictionary """
-    state = State.get(state_id)
+    state = storage.get(State, state_id)
     if state is None:
         abort(404)
     return jsonify(state.to_dict())
@@ -33,37 +35,28 @@ def create_state():
     """Returns the new State with the status code 201"""
     if not request.is_json:
         abort(400, 'Not a JSON')
-
     data = request.get_json()
     if 'name' not in data:
         abort(400, 'Missing name')
-
     state = State(**data)
-    state.save()
-
+    storage.new(state)
+    storage.save()
     return jsonify(state.to_dict()), 201
 
 
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
 def update_state(state_id):
     """Returns the State object with the status code 200"""
-    state = State.get(state_id)
+    state = storage.get(State, state_id)
     if state is None:
         abort(404)
-
     if not request.is_json:
         abort(400, 'Not a JSON')
-
     data = request.get_json()
-    data.pop('id', None)
-    data.pop('created_at', None)
-    data.pop('updated_at', None)
-
     for key, value in data.items():
-        setattr(state, key, value)
-
-    state.save()
-
+        if key not in ['id', 'created_at', 'updated_at']:
+            setattr(state, key, value)
+    storage.save()
     return jsonify(state.to_dict()), 200
 
 
@@ -71,10 +64,11 @@ def update_state(state_id):
                  methods=['DELETE'], strict_slashes=False)
 def delete_state_by_id(state_id):
     """Deletes a State objec"""
-    state = State.get(state_id)
+    state = storage.get(State, state_id)
     if state is None:
         abort(404)
-    state.delete()
+    storage.delete(state)
+    storage.save()
     return jsonify({}), 200
 
 

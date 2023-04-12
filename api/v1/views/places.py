@@ -4,9 +4,9 @@ State objects that handles all default RESTFul API actions
 """
 from flask import jsonify, abort, request
 from api.v1.views import app_views
-from models.state import State
 from models.city import City
 from models.place import Place
+from models.user import User
 from models import storage
 
 

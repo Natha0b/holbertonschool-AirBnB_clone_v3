@@ -7,12 +7,16 @@ from api.v1.views import app_views
 from models import storage
 from flask import jsonify
 import os
+from flask_cors import CORS
 
 """create a variable app, instance of Flask"""
 app = Flask(__name__)
 
 """register the blueprint app_views"""
 app.register_blueprint(app_views)
+
+"""HTTP access control (CORS)"""
+CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
 
 
 @app.teardown_appcontext

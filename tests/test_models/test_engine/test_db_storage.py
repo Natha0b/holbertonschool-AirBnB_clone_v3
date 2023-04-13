@@ -86,22 +86,54 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
-    
-    def test_dbstorage_get_and_count():
-        storage = DBStorage()
-        storage.reload()
 
-        # Create some objects
-        state = State(name="California")
-        storage.new(state)
-        storage.save()
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_get(self):
+        """Test that get method retrieves one object"""
+        obj = State(name="Connecticut")
+        models.storage.new(obj)
+        models.storage.save()
 
-        # Test get() method
-        retrieved_state = storage.get(State, state.id)
-        assert retrieved_state == state
+        # Test correct get result with non existing object
+        self.assertIs(models.storage.get(None, None), None)
 
-        # Test count() method
-        assert storage.count() == 1
-        assert storage.count(State) == 1
-        assert storage.count(City) == 0
-        
+        # Test correct get result with non existing id
+        rand = random.choice(list(classes.values()))
+        self.assertIs(models.storage.get(rand, None), None)
+
+        # Test correct get for sample object created
+        get_obj = models.storage.get(State, obj.id)
+        self.assertEqual(obj, get_obj)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing file storage")
+    def test_count(self):
+        """Test that count method counts the exact number of objects"""
+        from os import getenv
+        import MySQLdb
+
+        HBNB_MYSQL_USER = getenv('HBNB_MYSQL_USER')
+        HBNB_MYSQL_PWD = getenv('HBNB_MYSQL_PWD')
+        HBNB_MYSQL_HOST = getenv('HBNB_MYSQL_HOST')
+        HBNB_MYSQL_DB = getenv('HBNB_MYSQL_DB')
+
+        # Test correct count for a specific object type
+        obj = State(name="Wyoming")
+        models.storage.new(obj)
+        models.storage.save()
+
+        try:
+            db = MySQLdb.connect(HBNB_MYSQL_HOST, HBNB_MYSQL_USER,
+                                 HBNB_MYSQL_PWD, HBNB_MYSQL_DB)
+        except Exception:
+            return
+
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM states;")
+        result = cursor.fetchall()
+
+        self.assertEqual(len(result), models.storage.count(State))
+        db.close()
+
+        # Test correct count for all objects
+        total_count = len(models.storage.all())
+        self.assertEqual(total_count, models.storage.count())

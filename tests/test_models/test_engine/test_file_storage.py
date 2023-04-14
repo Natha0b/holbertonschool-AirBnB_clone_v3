@@ -18,7 +18,6 @@ import json
 import os
 import pep8
 import unittest
-
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
@@ -26,7 +25,6 @@ classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
 
 class TestFileStorageDocs(unittest.TestCase):
     """Tests to check the documentation and style of FileStorage class"""
-
     @classmethod
     def setUpClass(cls):
         """Set up for the doc tests"""
@@ -72,7 +70,6 @@ test_file_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_all_returns_dict(self):
         """Test that all returns the FileStorage.__objects attr"""
@@ -83,21 +80,19 @@ class TestFileStorage(unittest.TestCase):
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_new(self):
-        """Test that new adds an object to the FileStorage.__objects attr"""
+        """test that new adds an object to the FileStorage.__objects attr"""
         storage = FileStorage()
-        save_objects = storage._FileStorage__objects.copy()
-        storage._FileStorage__objects = {}
+        save = FileStorage._FileStorage__objects
+        FileStorage._FileStorage__objects = {}
         test_dict = {}
         for key, value in classes.items():
             with self.subTest(key=key, value=value):
                 instance = value()
-                instance_key = "{}.{}".format(instance.__class__.__name__,
-                                              instance.id)
+                instance_key = instance.__class__.__name__ + "." + instance.id
                 storage.new(instance)
                 test_dict[instance_key] = instance
-                self.assertEqual(test_dict,
-                                 storage._FileStorage__objects)
-        storage._FileStorage__objects = save_objects
+                self.assertEqual(test_dict, storage._FileStorage__objects)
+        FileStorage._FileStorage__objects = save
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_save(self):
@@ -106,16 +101,34 @@ class TestFileStorage(unittest.TestCase):
         new_dict = {}
         for key, value in classes.items():
             instance = value()
-            instance_key = "{}.{}".format(instance.__class__.__name__,
-                                          instance.id)
+            instance_key = instance.__class__.__name__ + "." + instance.id
             new_dict[instance_key] = instance
-        save_objects = FileStorage._FileStorage__objects
+        save = FileStorage._FileStorage__objects
         FileStorage._FileStorage__objects = new_dict
         storage.save()
-        FileStorage._FileStorage__objects = save_objects
+        FileStorage._FileStorage__objects = save
         for key, value in new_dict.items():
             new_dict[key] = value.to_dict()
         string = json.dumps(new_dict)
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+    
+    def test_filestorage_get_and_count():
+        """test get and count"""
+        storage = FileStorage()
+        storage.reload()
+
+        # Create some objects
+        state = State(name="California")
+        storage.new(state)
+        storage.save()
+
+        # Test get() method
+        retrieved_state = storage.get(State, state.id)
+        assert retrieved_state == state
+
+        # Test count() method
+        assert storage.count() == 1
+        assert storage.count(State) == 1
+        assert storage.count(City) == 0

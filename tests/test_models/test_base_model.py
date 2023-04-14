@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Test BaseModel for expected behavior and documentation"""
-from datetime import datetime, timedelta
+from datetime import datetime
 import inspect
 import models
 import pep8 as pycodestyle
@@ -84,14 +84,13 @@ class TestBaseModel(unittest.TestCase):
         value."""
         tic = datetime.now()
         inst1 = BaseModel()
-        time.sleep(0.01)
         toc = datetime.now()
-        self.assertFalse(tic <= inst1.created_at <= toc + timedelta(seconds=1))
-        time.sleep(0.01)
+        self.assertTrue(tic <= inst1.created_at <= toc)
+        time.sleep(1e-4)
         tic = datetime.now()
         inst2 = BaseModel()
         toc = datetime.now()
-        self.assertFalse(tic <= inst2.created_at <= toc + timedelta(seconds=1))
+        self.assertTrue(tic <= inst2.created_at <= toc)
         self.assertEqual(inst1.created_at, inst1.updated_at)
         self.assertEqual(inst2.created_at, inst2.updated_at)
         self.assertNotEqual(inst1.created_at, inst2.created_at)
@@ -100,7 +99,6 @@ class TestBaseModel(unittest.TestCase):
     def test_uuid(self):
         """Test that id is a valid uuid"""
         inst1 = BaseModel()
-        time.sleep(2)
         inst2 = BaseModel()
         for inst in [inst1, inst2]:
             uuid = inst.id

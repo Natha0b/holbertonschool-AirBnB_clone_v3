@@ -3,6 +3,7 @@
 Contains the TestFileStorageDocs classes
 """
 
+import random
 from datetime import datetime
 import inspect
 import models
@@ -114,21 +115,49 @@ class TestFileStorage(unittest.TestCase):
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
 
-    def test_filestorage_get_and_count():
-        """test get and count"""
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        """Test that get method retrieves one object"""
         storage = FileStorage()
-        storage.reload()
-
-        # Create some objects
-        state = State(name="California")
-        storage.new(state)
+        new_dict = {}
+        for key, value in classes.items():
+            instance = value()
+            instance_key = instance.__class__.__name__ + "." + instance.id
+            new_dict[instance_key] = instance
+        FileStorage._FileStorage__objects = new_dict
         storage.save()
 
-        # Test get() method
-        retrieved_state = storage.get(State, state.id)
-        assert retrieved_state == state
+        # Test correct get result with non existing object
+        self.assertIs(storage.get(None, None), None)
 
-        # Test count() method
-        assert storage.count() == 1
-        assert storage.count(State) == 1
-        assert storage.count(City) == 0
+        # Test correct get result with non existing id
+        rand = random.choice(list(classes.values()))
+        self.assertIs(storage.get(rand, None), None)
+
+        # Test correct get for each existing object type
+        for obj in storage.all().values():
+            obj_get = storage.get(type(obj), obj.id)
+            self.assertEqual(obj_get, obj)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        """Test that count method counts the exact number of objects"""
+        storage = FileStorage()
+        new_dict = {}
+        for key, value in classes.items():
+            instance = value()
+            instance_key = instance.__class__.__name__ + "." + instance.id
+            new_dict[instance_key] = instance
+        FileStorage._FileStorageobjects = new_dict
+        storage.save()
+
+        # Test correct count for each existing object type
+        for cls_name in classes.values():
+            dict_count = len([obj for obj in
+                              FileStorage._FileStorageobjects.values()
+                              if obj.__class__ == cls_name])
+            self.assertEqual(dict_count, storage.count(cls_name))
+
+        # Test correct count for all objects
+        total_count = len(FileStorage._FileStorage__objects)
+        self.assertEqual(total_count, storage.count())
